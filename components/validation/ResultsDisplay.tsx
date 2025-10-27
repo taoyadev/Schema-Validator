@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -9,17 +9,26 @@ import { RichResultsPreview } from './RichResultsPreview';
 import { PropertyTreeView } from './PropertyTreeView';
 import { DeviceSimulator } from './DeviceSimulator';
 import { ShareExportButtons } from './ShareExportButtons';
+import { SEOAnalysisComponent } from './SEOAnalysis';
+import { saveToHistory } from '@/lib/history/storage';
+import { seoAnalyzer } from '@/lib/validation/seo-analyzer';
 import type { ValidationResponse } from '@/lib/validation/types';
 
 interface ResultsDisplayProps {
   results: ValidationResponse;
 }
 
-type TabType = 'overview' | 'rich-results' | 'schema-tree';
+type TabType = 'overview' | 'rich-results' | 'schema-tree' | 'seo-analysis';
 
 export function ResultsDisplay({ results }: ResultsDisplayProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [deviceType, setDeviceType] = useState<'mobile' | 'desktop'>('desktop');
+  const [savedToHistory, setSavedToHistory] = useState(false);
+
+  // Calculate SEO analysis for all schemas
+  const seoAnalyses = useMemo(() => {
+    return results.schemas.map(schema => seoAnalyzer.analyze(schema));
+  }, [results.schemas]);
 
   const getScoreColor = (score: number): string => {
     if (score >= 80) return 'text-green-600';
@@ -36,6 +45,17 @@ export function ResultsDisplay({ results }: ResultsDisplayProps) {
 
   const { totalErrors, totalWarnings, totalPassed } = results.summary;
   const totalSchemas = results.schemas.length;
+
+  const handleSaveToHistory = () => {
+    try {
+      saveToHistory(results);
+      setSavedToHistory(true);
+      setTimeout(() => setSavedToHistory(false), 3000);
+    } catch (error) {
+      console.error('Failed to save to history:', error);
+      alert('Failed to save to history. Please try again.');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -132,10 +152,32 @@ export function ResultsDisplay({ results }: ResultsDisplayProps) {
         </Alert>
       )}
 
-      {/* Share and Export Buttons */}
+      {/* Save to History and Share/Export Buttons */}
       {totalSchemas > 0 && (
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <button
+                onClick={handleSaveToHistory}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                {savedToHistory ? (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Saved to History!
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    Save to History
+                  </>
+                )}
+              </button>
+            </div>
             <ShareExportButtons results={results} />
           </CardContent>
         </Card>
@@ -175,6 +217,16 @@ export function ResultsDisplay({ results }: ResultsDisplayProps) {
             >
               Schema Tree
             </button>
+            <button
+              onClick={() => setActiveTab('seo-analysis')}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'seo-analysis'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+              }`}
+            >
+              SEO Analysis
+            </button>
           </div>
 
           {/* Tab Content */}
@@ -210,6 +262,19 @@ export function ResultsDisplay({ results }: ResultsDisplayProps) {
                       Schema #{index + 1}: {result.schema.type}
                     </h3>
                     <PropertyTreeView result={result} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === 'seo-analysis' && (
+              <div className="space-y-6">
+                {results.schemas.map((result, index) => (
+                  <div key={index} className="space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      Schema #{index + 1}: {result.schema.type}
+                    </h3>
+                    <SEOAnalysisComponent analysis={seoAnalyses[index]} />
                   </div>
                 ))}
               </div>

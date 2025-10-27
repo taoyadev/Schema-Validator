@@ -33,6 +33,30 @@ export function RichResultsPreview({ result, deviceType }: RichResultsPreviewPro
       return <BreadcrumbPreview props={props} />;
     }
 
+    if (type === 'FAQPage') {
+      return <FAQPreview props={props} />;
+    }
+
+    if (type === 'HowTo') {
+      return <HowToPreview props={props} />;
+    }
+
+    if (type === 'Recipe') {
+      return <RecipePreview props={props} deviceType={deviceType} />;
+    }
+
+    if (type === 'Event') {
+      return <EventPreview props={props} />;
+    }
+
+    if (type === 'JobPosting') {
+      return <JobPreview props={props} />;
+    }
+
+    if (type === 'VideoObject') {
+      return <VideoPreview props={props} />;
+    }
+
     return <GenericPreview type={type} />;
   };
 
@@ -339,6 +363,254 @@ function BreadcrumbPreview({ props }: { props: Record<string, unknown> }) {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function FAQPreview({ props }: { props: Record<string, unknown> }) {
+  const mainEntity = (props.mainEntity || []) as Array<{ name?: string; acceptedAnswer?: { text?: string } }>;
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden max-w-2xl">
+      <div className="p-4 space-y-4">
+        <h3 className="text-xl font-semibold text-gray-900">Frequently Asked Questions</h3>
+        {mainEntity.slice(0, 3).map((faq, index) => (
+          <details key={index} className="group border-t pt-4">
+            <summary className="flex items-center justify-between cursor-pointer text-blue-600 hover:text-blue-700 font-medium">
+              {faq.name || `Question ${index + 1}`}
+              <svg className="w-5 h-5 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <p className="mt-3 text-sm text-gray-700">
+              {faq.acceptedAnswer?.text || 'Answer text'}
+            </p>
+          </details>
+        ))}
+        {mainEntity.length > 3 && (
+          <p className="text-sm text-gray-500">+ {mainEntity.length - 3} more questions</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HowToPreview({ props }: { props: Record<string, unknown> }) {
+  const steps = (props.step || []) as Array<{ name?: string; text?: string }>;
+  const totalTime = props.totalTime as string | undefined;
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden max-w-2xl">
+      <div className="p-4">
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          {props.name ? String(props.name) : 'How-To Title'}
+        </h3>
+        {props.description ? (
+          <p className="text-sm text-gray-700 mb-4">{String(props.description)}</p>
+        ) : null}
+        {totalTime && (
+          <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Total time: {totalTime}
+          </div>
+        )}
+        <div className="space-y-3">
+          {steps.slice(0, 5).map((step, index) => (
+            <div key={index} className="flex gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                {index + 1}
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900">{step.name || `Step ${index + 1}`}</h4>
+                <p className="text-sm text-gray-700 mt-1">{step.text || 'Step instructions'}</p>
+              </div>
+            </div>
+          ))}
+          {steps.length > 5 && (
+            <p className="text-sm text-gray-500 pl-11">+ {steps.length - 5} more steps</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecipePreview({ props, deviceType }: { props: Record<string, unknown>; deviceType: string }) {
+  const imageData = props.image;
+  const image = Array.isArray(imageData) ? imageData[0] : imageData;
+  const imageUrl = typeof image === 'string' ? image : (image as { url?: string })?.url;
+  const isMobile = deviceType === 'mobile';
+
+  return (
+    <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${isMobile ? 'max-w-sm' : 'max-w-2xl'}`}>
+      <div className="p-4">
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          {props.name ? String(props.name) : 'Recipe Name'}
+        </h3>
+
+        {imageUrl && (
+          <div className="mb-4">
+            <img
+              src={imageUrl}
+              alt={props.name ? String(props.name) : 'Recipe'}
+              className="w-full h-48 object-cover rounded"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 gap-4 mb-4 text-center">
+          {props.prepTime ? (
+            <div>
+              <p className="text-xs text-gray-600">Prep</p>
+              <p className="font-semibold text-sm">{String(props.prepTime)}</p>
+            </div>
+          ) : null}
+          {props.cookTime ? (
+            <div>
+              <p className="text-xs text-gray-600">Cook</p>
+              <p className="font-semibold text-sm">{String(props.cookTime)}</p>
+            </div>
+          ) : null}
+          {props.recipeYield ? (
+            <div>
+              <p className="text-xs text-gray-600">Serves</p>
+              <p className="font-semibold text-sm">{String(props.recipeYield)}</p>
+            </div>
+          ) : null}
+        </div>
+
+        {props.description ? (
+          <p className="text-sm text-gray-700 mb-3">{String(props.description)}</p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function EventPreview({ props }: { props: Record<string, unknown> }) {
+  const startDate = props.startDate ? new Date(props.startDate as string).toLocaleString() : '';
+  const location = props.location as { name?: string; address?: string | { streetAddress?: string; addressLocality?: string } } | undefined;
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden max-w-2xl">
+      <div className="p-4">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0 w-16 h-16 bg-blue-100 rounded flex flex-col items-center justify-center">
+            <span className="text-xl font-bold text-blue-600">
+              {new Date(props.startDate as string || Date.now()).getDate()}
+            </span>
+            <span className="text-xs text-blue-600">
+              {new Date(props.startDate as string || Date.now()).toLocaleString('default', { month: 'short' })}
+            </span>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold text-gray-900 mb-1">
+              {props.name ? String(props.name) : 'Event Name'}
+            </h3>
+            {startDate && (
+              <p className="text-sm text-gray-600 mb-2">{startDate}</p>
+            )}
+            {location && (
+              <p className="text-sm text-gray-700">
+                📍 {location.name || 'Location'}
+              </p>
+            )}
+            {props.description ? (
+              <p className="text-sm text-gray-700 mt-2 line-clamp-2">
+                {String(props.description)}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JobPreview({ props }: { props: Record<string, unknown> }) {
+  const hiringOrg = props.hiringOrganization as { name?: string } | undefined;
+  const jobLocation = props.jobLocation as { address?: { addressLocality?: string; addressRegion?: string } } | undefined;
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden max-w-2xl">
+      <div className="p-4">
+        <h3 className="text-xl font-semibold text-gray-900 mb-1">
+          {props.title ? String(props.title) : 'Job Title'}
+        </h3>
+        <p className="text-sm text-gray-600 mb-2">
+          {hiringOrg?.name || 'Company Name'}
+        </p>
+        {jobLocation?.address && (
+          <p className="text-sm text-gray-700 mb-3">
+            📍 {jobLocation.address.addressLocality}, {jobLocation.address.addressRegion}
+          </p>
+        )}
+        {props.employmentType ? (
+          <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded mb-3">
+            {String(props.employmentType)}
+          </span>
+        ) : null}
+        {props.description ? (
+          <p className="text-sm text-gray-700 line-clamp-3">
+            {String(props.description)}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function VideoPreview({ props }: { props: Record<string, unknown> }) {
+  const thumbnailData = props.thumbnailUrl;
+  const thumbnail = Array.isArray(thumbnailData) ? thumbnailData[0] : thumbnailData;
+  const thumbnailUrl = typeof thumbnail === 'string' ? thumbnail : (thumbnail as { url?: string })?.url;
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden max-w-md">
+      {thumbnailUrl && (
+        <div className="relative">
+          <img
+            src={thumbnailUrl}
+            alt={props.name ? String(props.name) : 'Video'}
+            className="w-full h-48 object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+              </svg>
+            </div>
+          </div>
+          {props.duration ? (
+            <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+              {String(props.duration)}
+            </div>
+          ) : null}
+        </div>
+      )}
+      <div className="p-4">
+        <h3 className="font-semibold text-gray-900 mb-1">
+          {props.name ? String(props.name) : 'Video Title'}
+        </h3>
+        {props.description ? (
+          <p className="text-sm text-gray-700 line-clamp-2">
+            {String(props.description)}
+          </p>
+        ) : null}
+        {props.uploadDate ? (
+          <p className="text-xs text-gray-500 mt-2">
+            Uploaded: {new Date(props.uploadDate as string).toLocaleDateString()}
+          </p>
+        ) : null}
       </div>
     </div>
   );

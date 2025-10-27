@@ -128,3 +128,48 @@ export interface BatchValidationJob {
   createdAt: string;
   completedAt?: string;
 }
+
+/**
+ * SEO Analysis Types
+ */
+export interface SEOMetrics {
+  requiredFieldsScore: number; // 0-100
+  recommendedFieldsScore: number; // 0-100
+  technicalScore: number; // 0-100
+  contentQualityScore: number; // 0-100
+  richResultsReadiness: number; // 0-100
+  overallScore: number; // 0-100
+}
+
+export interface ImprovementSuggestion {
+  id: string;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  category: 'required' | 'recommended' | 'enhancement' | 'technical';
+  title: string;
+  description: string;
+  impact: SeoImpact;
+  effort: 'low' | 'medium' | 'high';
+  property: string;
+  currentValue?: unknown;
+  suggestedValue?: string;
+  fix: string;
+  documentation?: string;
+  estimatedImpact: string; // e.g., "+15 points to SEO score"
+}
+
+export interface SEOAnalysis {
+  metrics: SEOMetrics;
+  suggestions: ImprovementSuggestion[];
+  strengths: string[];
+  weaknesses: string[];
+  completenessBreakdown: {
+    required: { total: number; completed: number; percentage: number };
+    recommended: { total: number; completed: number; percentage: number };
+    optional: { total: number; completed: number; percentage: number };
+  };
+  competitorComparison?: {
+    averageScore: number;
+    yourScore: number;
+    percentile: number;
+  };
+}

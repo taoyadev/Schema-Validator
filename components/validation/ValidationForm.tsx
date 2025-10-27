@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { ValidationResponse } from '@/lib/validation/types';
+import { SchemaBuilder } from '@/components/builder/SchemaBuilder';
+import { SchemaEditor } from '@/components/editor/SchemaEditor';
 
 interface ValidationFormProps {
   onValidationComplete: (results: ValidationResponse) => void;
@@ -18,11 +20,13 @@ export function ValidationForm({
   onValidationComplete,
   onValidationStart,
 }: ValidationFormProps) {
-  const [mode, setMode] = useState<'url' | 'json-ld'>('url');
+  const [mode, setMode] = useState<'url' | 'json-ld' | 'build'>('url');
   const [urlInput, setUrlInput] = useState('');
   const [jsonInput, setJsonInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [useMonacoEditor, setUseMonacoEditor] = useState(true);
+  const [liveValidationResult, setLiveValidationResult] = useState<ValidationResponse | null>(null);
 
   const validateUrl = (url: string): boolean => {
     try {
@@ -63,6 +67,12 @@ export function ValidationForm({
       return;
     }
 
+    // If we have live validation result for JSON-LD mode with Monaco editor, use it
+    if (mode === 'json-ld' && useMonacoEditor && liveValidationResult) {
+      onValidationComplete(liveValidationResult);
+      return;
+    }
+
     setIsLoading(true);
     onValidationStart?.();
 
@@ -96,13 +106,31 @@ export function ValidationForm({
     }
   };
 
+  const handleBuilderGenerate = (jsonLd: string) => {
+    // Populate JSON-LD input and switch to validation mode
+    setJsonInput(jsonLd);
+    setMode('json-ld');
+    // Trigger validation
+    setTimeout(() => {
+      const form = document.querySelector('form');
+      if (form) {
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+    }, 100);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <Tabs value={mode} onValueChange={(v) => setMode(v as 'url' | 'json-ld')}>
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs value={mode} onValueChange={(v) => setMode(v as 'url' | 'json-ld' | 'build')}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="build">Build Schema</TabsTrigger>
           <TabsTrigger value="url">Validate URL</TabsTrigger>
           <TabsTrigger value="json-ld">Validate JSON-LD</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="build" className="space-y-4">
+          <SchemaBuilder onGenerate={handleBuilderGenerate} />
+        </TabsContent>
 
         <TabsContent value="url" className="space-y-4">
           <div className="space-y-2">
@@ -124,37 +152,70 @@ export function ValidationForm({
         </TabsContent>
 
         <TabsContent value="json-ld" className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="json-input">JSON-LD Code</Label>
-            <Textarea
-              id="json-input"
-              placeholder={`{
+          <div className="flex items-center justify-between mb-4">
+            <Label>JSON-LD Code</Label>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {useMonacoEditor ? 'Advanced Editor' : 'Simple Editor'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setUseMonacoEditor(!useMonacoEditor)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  useMonacoEditor ? 'bg-blue-600' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    useMonacoEditor ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {useMonacoEditor ? (
+            <SchemaEditor
+              value={jsonInput}
+              onChange={setJsonInput}
+              onValidationComplete={setLiveValidationResult}
+              height="500px"
+              liveValidation={true}
+            />
+          ) : (
+            <div className="space-y-2">
+              <Textarea
+                id="json-input"
+                placeholder={`{
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "Your Article Title",
   ...
 }`}
-              value={jsonInput}
-              onChange={(e) => setJsonInput(e.target.value)}
-              disabled={isLoading}
-              className="min-h-[200px] font-mono text-sm"
-            />
-            <p className="text-sm text-muted-foreground">
-              Paste your JSON-LD structured data for validation
-            </p>
-          </div>
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+                disabled={isLoading}
+                className="min-h-[200px] font-mono text-sm"
+              />
+              <p className="text-sm text-muted-foreground">
+                Paste your JSON-LD structured data for validation
+              </p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
-      {error && (
+      {error && mode !== 'build' && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? 'Validating...' : 'Validate Schema'}
-      </Button>
+      {mode !== 'build' && (
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? 'Validating...' : 'Validate Schema'}
+        </Button>
+      )}
     </form>
   );
 }

@@ -6,6 +6,12 @@ import { articleRules, newsArticleRules, blogPostingRules } from './article';
 import { productRules, aggregateRatingRules, offerRules } from './product';
 import { organizationRules, localBusinessRules } from './organization';
 import { breadcrumbListRules, breadcrumbItemRules } from './breadcrumb';
+import { faqPageRules } from './faq';
+import { howToRules } from './howto';
+import { recipeRules } from './recipe';
+import { eventRules } from './event';
+import { jobPostingRules } from './job';
+import { videoObjectRules } from './video';
 import { ValidationRule } from '../types';
 
 /**
@@ -29,6 +35,14 @@ export const schemaRulesMap: Record<string, ValidationRule[]> = {
   // Navigation
   BreadcrumbList: breadcrumbListRules,
   ListItem: breadcrumbItemRules,
+
+  // Other content types
+  FAQPage: faqPageRules,
+  HowTo: howToRules,
+  Recipe: recipeRules,
+  Event: eventRules,
+  JobPosting: jobPostingRules,
+  VideoObject: videoObjectRules,
 };
 
 /**
@@ -66,4 +80,10 @@ export {
   localBusinessRules,
   breadcrumbListRules,
   breadcrumbItemRules,
+  faqPageRules,
+  howToRules,
+  recipeRules,
+  eventRules,
+  jobPostingRules,
+  videoObjectRules,
 };
