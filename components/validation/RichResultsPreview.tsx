@@ -13,6 +13,23 @@ export function RichResultsPreview({ result, deviceType }: RichResultsPreviewPro
   const { schema } = result;
   const props = schema.properties as Record<string, unknown>;
 
+  // Supported Rich Results types
+  const supportedTypes = [
+    'Article',
+    'NewsArticle',
+    'BlogPosting',
+    'Product',
+    'Recipe',
+    'Event',
+    'JobPosting',
+    'FAQPage',
+    'HowTo',
+    'VideoObject',
+  ];
+
+  const isTypeSupported = supportedTypes.includes(schema.type);
+  const hasErrors = result.errors && result.errors.length > 0;
+
   // Determine which preview to render based on schema type
   const renderPreview = () => {
     const type = schema.type;
@@ -60,6 +77,77 @@ export function RichResultsPreview({ result, deviceType }: RichResultsPreviewPro
     return <GenericPreview type={type} />;
   };
 
+  const renderNotEligibleMessage = () => {
+    // Case 1: Schema type is not supported by Google Rich Results
+    if (!isTypeSupported) {
+      return (
+        <div className="text-center py-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
+            <svg
+              className="w-6 h-6 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-900 font-medium mb-2">
+            {schema.type} schema is not supported by Google Rich Results
+          </p>
+          <p className="text-sm text-gray-600 mb-4">
+            This schema type doesn&apos;t qualify for rich result previews in Google Search
+          </p>
+          <div className="inline-block bg-blue-50 rounded-lg px-4 py-3 text-left">
+            <p className="text-xs font-medium text-blue-900 mb-2">Supported Types:</p>
+            <div className="flex flex-wrap gap-2">
+              {supportedTypes.map((type) => (
+                <span
+                  key={type}
+                  className="inline-flex items-center px-2 py-1 rounded bg-white text-xs font-medium text-blue-700 border border-blue-200"
+                >
+                  {type}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Case 2: Schema type is supported but has errors
+    return (
+      <div className="text-center py-8">
+        <div className="inline-flex items-center justify-center w-12 h-12 bg-amber-100 rounded-full mb-4">
+          <svg
+            className="w-6 h-6 text-amber-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        </div>
+        <p className="text-gray-900 font-medium mb-2">Not eligible for Rich Results preview</p>
+        <p className="text-sm text-gray-600 mb-4">
+          {hasErrors
+            ? 'Fix the errors above to enable rich result previews'
+            : 'This schema needs all required properties to show rich results'}
+        </p>
+      </div>
+    );
+  };
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="bg-slate-50 border-b">
@@ -71,14 +159,7 @@ export function RichResultsPreview({ result, deviceType }: RichResultsPreviewPro
         </div>
       </CardHeader>
       <CardContent className="p-6">
-        {result.richResultsEligible ? (
-          renderPreview()
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <p className="mb-2">This schema is not eligible for Rich Results</p>
-            <p className="text-sm">Fix the errors above to enable rich result previews</p>
-          </div>
-        )}
+        {result.richResultsEligible ? renderPreview() : renderNotEligibleMessage()}
       </CardContent>
     </Card>
   );
