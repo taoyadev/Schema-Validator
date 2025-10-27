@@ -12,6 +12,7 @@ interface NavLink {
 
 const navigation: NavLink[] = [
   { label: 'Home', href: '/', icon: '🏠' },
+  { label: 'Schema Builder', href: '/builder', icon: '🔨' },
   { label: 'Batch Audit', href: '/audit', icon: '📊' },
   {
     label: 'Article',

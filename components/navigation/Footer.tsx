@@ -47,6 +47,19 @@ export function Footer() {
               <h4 className="font-bold text-white mb-5">Tools</h4>
               <ul className="space-y-3 text-sm">
                 <li>
+                  <Link href="/" className="text-slate-400 hover:text-white transition-colors">
+                    Schema Validator
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/builder"
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    Schema Builder
+                  </Link>
+                </li>
+                <li>
                   <Link
                     href="/audit"
                     className="text-slate-400 hover:text-white transition-colors"
@@ -55,8 +68,11 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="text-slate-400 hover:text-white transition-colors">
-                    Schema Validator
+                  <Link
+                    href="/api-docs"
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    API Documentation
                   </Link>
                 </li>
               </ul>
