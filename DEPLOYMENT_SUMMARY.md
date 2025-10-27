@@ -488,3 +488,84 @@ All code adheres to:
 **Date**: October 27, 2025
 **Time**: 06:12 UTC
 **Duration**: ~3 hours (full implementation + deployment)
+
+---
+
+## 🔄 Update: Rich Results Preview Enhancement (October 27, 2025)
+
+**Deployment ID**: schema-validator-gwl9cgf0w-discoverprofiles-projects
+**Commit**: f74bf1c
+**Status**: ✅ Successfully Deployed
+
+### Enhancement Details
+
+Improved the Rich Results Preview component to provide clearer, more actionable messaging when schemas are not eligible for Rich Results previews.
+
+### Changes Made
+
+**File Modified**: `components/validation/RichResultsPreview.tsx`
+
+**Key Improvements**:
+
+1. **Intelligent Type Detection**
+   - Added comprehensive list of 10 Google-supported schema types
+   - Automatic detection of whether schema type supports Rich Results
+
+2. **Dual-State Messaging**
+   - **Case 1: Type Not Supported**
+     - Gray info icon (neutral)
+     - Message: "{Type} schema is not supported by Google Rich Results"
+     - Shows complete list of supported types in badge format
+     - Educational rather than error-focused
+
+   - **Case 2: Type Supported But Has Errors**
+     - Amber warning icon (actionable)
+     - Message: "Fix the errors above to enable rich result previews"
+     - Encourages users to resolve validation errors
+
+3. **Enhanced UX**
+   - Color-coded visual indicators
+   - Comprehensive list display of supported types
+   - Improved information hierarchy
+   - Better user education about Rich Results eligibility
+
+### User Impact
+
+**Before**: Confusing message "Not eligible for Rich Results. Fix the errors above" appeared for both unsupported types and schemas with errors.
+
+**After**: Clear distinction between:
+- Schema types that will never support Rich Results (informational)
+- Schema types that can support Rich Results once errors are fixed (actionable)
+
+### Technical Details
+
+```typescript
+const supportedTypes = [
+  'Article', 'NewsArticle', 'BlogPosting', 'Product', 'Recipe',
+  'Event', 'JobPosting', 'FAQPage', 'HowTo', 'VideoObject',
+];
+
+const isTypeSupported = supportedTypes.includes(schema.type);
+const hasErrors = result.errors && result.errors.length > 0;
+```
+
+### Verification
+
+- ✅ Deployment successful (6s build time)
+- ✅ Production accessible (HTTP 200)
+- ✅ Changes live at https://www.schemavalidator.com
+- ✅ SSL certificate active
+
+### Code Metrics
+
+- **Lines Added**: 89
+- **Lines Removed**: 8
+- **Net Change**: +81 lines
+- **Files Changed**: 1
+
+---
+
+**Latest Deployment Completed Successfully** ✅
+**Date**: October 27, 2025
+**Deployment URL**: https://www.schemavalidator.com
+**GitHub Commit**: https://github.com/taoyadev/Schema-Validator/commit/f74bf1c
